@@ -58,8 +58,6 @@ class FacebookStrategy extends OpauthStrategy{
 				'redirect_uri'=> $this->strategy['redirect_uri'],
 				'code' => trim($_GET['code'])
 			);
-			
-			print '<pre>'; print_r( $url ); print '<pre>'; exit();
 			$response = $this->serverGet($url, $params, null, $headers);
 			
 			parse_str($response, $results);
