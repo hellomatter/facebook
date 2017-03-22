@@ -15,9 +15,9 @@ class FacebookStrategy extends OpauthStrategy{
 	
 	/**
 	 * Compulsory config keys, listed as unassociative arrays
-	 * eg. array('app_id', 'app_secret');
+	 * eg. array('app_id', 'app_secret', 'version');
 	 */
-	public $expects = array('app_id', 'app_secret');
+	public $expects = array('app_id', 'app_secret', 'version');
 	
 	/**
 	 * Optional config keys with respective default values, listed as associative arrays
@@ -31,7 +31,7 @@ class FacebookStrategy extends OpauthStrategy{
 	 * Auth request
 	 */
 	public function request(){
-		$url = 'https://www.facebook.com/dialog/oauth';
+		$url = 'https://www.facebook.com/v2.6/dialog/oauth';
 		$params = array(
 			'client_id' => $this->strategy['app_id'],
 			'redirect_uri' => $this->strategy['redirect_uri']
@@ -41,7 +41,7 @@ class FacebookStrategy extends OpauthStrategy{
 		if (!empty($this->strategy['state'])) $params['state'] = $this->strategy['state'];
 		if (!empty($this->strategy['response_type'])) $params['response_type'] = $this->strategy['response_type'];
 		if (!empty($this->strategy['display'])) $params['display'] = $this->strategy['display'];
-		if (!empty($this->strategy['auth_type'])) $params['auth_type'] = $this->strategy['auth_type'];
+        if (!empty($this->strategy['auth_type'])) $params['auth_type'] = $this->strategy['auth_type'];
 		
 		$this->clientGet($url, $params);
 	}
@@ -58,6 +58,8 @@ class FacebookStrategy extends OpauthStrategy{
 				'redirect_uri'=> $this->strategy['redirect_uri'],
 				'code' => trim($_GET['code'])
 			);
+			
+			print '<pre>'; print_r( $url ); print '<pre>'; exit();
 			$response = $this->serverGet($url, $params, null, $headers);
 			
 			parse_str($response, $results);
@@ -70,7 +72,7 @@ class FacebookStrategy extends OpauthStrategy{
 					'uid' => $me->id,
 					'info' => array(
 						'name' => $me->name,
-						'image' => 'https://graph.facebook.com/'.$me->id.'/picture?type=square'
+						'image' => 'https://graph.facebook.com/v2.6/'.$me->id.'/picture'.(!empty($this->strategy['image_size']) ? '?'.http_build_query($this->strategy['image_size'], '', '&') : '')
 					),
 					'credentials' => array(
 						'token' => $results['access_token'],
@@ -125,7 +127,12 @@ class FacebookStrategy extends OpauthStrategy{
 	 * @return array Parsed JSON results
 	 */
 	private function me($access_token){
-		$me = $this->serverGet('https://graph.facebook.com/me', array('access_token' => $access_token), null, $headers);
+		$fields = 'id,email,first_name,gender,last_name,link,locale,name,timezone,updated_time,verified';//default value
+		if ( isset($this->strategy['fields']) ) {
+			$fields = $this->strategy['fields'];
+		}
+
+		$me = $this->serverGet('https://graph.facebook.com/v2.6/me', array('access_token' => $access_token, 'fields' => $fields), null, $headers);
 		if (!empty($me)){
 			return json_decode($me);
 		}
