@@ -60,10 +60,10 @@ class FacebookStrategy extends OpauthStrategy{
 			);
 			$response = $this->serverGet($url, $params, null, $headers);
 			
-			parse_str($response, $results);
+			$results = json_decode($response);
 
-			if (!empty($results) && !empty($results['access_token'])){
-				$me = $this->me($results['access_token']);
+			if (!empty($results) && !empty($results->access_token)){
+				$me = $this->me($results->access_token);
 
 				$this->auth = array(
 					'provider' => 'Facebook',
@@ -73,8 +73,8 @@ class FacebookStrategy extends OpauthStrategy{
 						'image' => 'https://graph.facebook.com/v2.6/'.$me->id.'/picture'.(!empty($this->strategy['image_size']) ? '?'.http_build_query($this->strategy['image_size'], '', '&') : '')
 					),
 					'credentials' => array(
-						'token' => $results['access_token'],
-						'expires' => date('c', time() + $results['expires'])
+						'token' => $results->access_token,
+						'expires' => date('c', time() + $results->expires)
 					),
 					'raw' => $me
 				);
